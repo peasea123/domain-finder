@@ -13,6 +13,7 @@ export function ResultsTabs({ results, isLoading = false }: ResultsTabsProps) {
   const [currentTab, setCurrentTab] = useState<"all" | "available" | "taken" | "unknown">("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<"domain" | "verdict" | "confidence">("domain");
+  const [filterMode, setFilterMode] = useState<"all" | "actionable" | "available-only">("all");
 
   const available = results.filter((r) => r.verdict === "AVAILABLE");
   const taken = results.filter((r) => r.verdict === "TAKEN");
@@ -27,6 +28,13 @@ export function ResultsTabs({ results, isLoading = false }: ResultsTabsProps) {
           : currentTab === "taken"
             ? taken
             : unknown;
+
+    // Apply filter mode
+    if (filterMode === "actionable") {
+      filtered = filtered.filter((r) => r.verdict === "AVAILABLE" || r.verdict === "TAKEN");
+    } else if (filterMode === "available-only") {
+      filtered = filtered.filter((r) => r.verdict === "AVAILABLE");
+    }
 
     if (searchTerm) {
       filtered = filtered.filter((r) =>
@@ -80,6 +88,30 @@ export function ResultsTabs({ results, isLoading = false }: ResultsTabsProps) {
             {tab.label}
           </button>
         ))}
+      </div>
+
+      {/* Filter Toggle */}
+      <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border">
+        <span className="text-sm font-medium text-gray-700">Show:</span>
+        <div className="flex gap-2">
+          {[
+            { id: "all", label: "All Results" },
+            { id: "actionable", label: "Available & Taken" },
+            { id: "available-only", label: "Available Only" },
+          ].map((option) => (
+            <button
+              key={option.id}
+              onClick={() => setFilterMode(option.id as any)}
+              className={`px-3 py-1 rounded-md text-sm font-medium transition ${
+                filterMode === option.id
+                  ? "bg-blue-600 text-white"
+                  : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Search and Controls */}

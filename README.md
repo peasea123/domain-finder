@@ -1,248 +1,310 @@
 # Domain Finder
 
-A smart domain name generator and availability checker that combines intelligent name generation with real-time DNS validation.
+A smart domain name generator and availability checker web app built with **Next.js 14**, **TypeScript**, and **Tailwind CSS**, deployed on **Vercel**.
 
 ## Features
 
 ✨ **Smart Name Generation**
-- CVCCVC pattern-based pronounceable names
-- Customizable length, prefixes, and suffixes
-- Support for multiple TLDs simultaneously
+- Customizable phonetic patterns: CVCV, CVCC, VCVC, CVCVC, CVVC, CCVC (C=Consonant, V=Vowel)
+- Configurable length, prefixes, suffixes, and TLDs
+- Excluded letters and forbidden bigrams support
+- Reproducible generation with seed option
+- Perfect for generating pronounceable brand names
 
-🔍 **Accurate Availability Checking**
-- Uses DNS resolution (most reliable method)
-- Detects taken, available, and unknown domains
-- Parallel checking for speed
+🔍 **Multi-Stage Availability Checking**
+- **DNS**: Cloudflare DoH JSON API for instant A/AAAA/CNAME/MX record lookup
+- **RDAP**: Verisign RDAP for authoritative .com/.net registration data (most reliable)
+- **HTTP**: Optional HEAD request to detect live web presence
+- Confidence levels: HIGH/MEDIUM/LOW based on check results
 
-⚡ **Fast & Efficient**
-- Batch process hundreds of domains
-- Threaded/async DNS lookups
-- Results caching
+⚡ **Fast & Scalable**
+- Parallel concurrency control (1-50 concurrent checks)
+- Configurable timeouts and retries
+- Vercel serverless-friendly chunking (max 500 domains per request)
+- Real-time progress and detailed result summaries
 
-🎯 **Flexible Interface**
-- Python library API
-- Command-line interface
-- (Optional) REST API for web integration
+📊 **Results Management**
+- Tabular results with sorting and filtering (Available/Taken/Unknown)
+- Search across results
+- Export to CSV and JSON
+- Per-domain check reasons and signals
+- Confidence indicators
 
-## Quick Start
-
-### Installation
-
-```bash
-git clone https://github.com/yourusername/domain-finder.git
-cd domain-finder
-pip install -r requirements.txt
-```
-
-### Basic Usage
-
-```python
-from domain_finder import NameGenerator, AvailabilityChecker
-
-# Generate some names
-generator = NameGenerator()
-names = generator.generate(count=20, length=4, tlds=["com", "io"])
-
-# Check if they're available
-checker = AvailabilityChecker()
-results = checker.check_batch(names)
-
-# Show results
-for result in results:
-    if result["status"] == "AVAILABLE":
-        print(f"✓ {result['domain']} is available!")
-```
-
-### Command Line
-
-```bash
-# Generate and check 50 four-letter domains
-python -m domain_finder.cli generate --count 50 --length 4 --check
-
-# Custom specifications
-python -m domain_finder.cli generate --count 100 --length 5 --prefix "br" --tlds "com,io" --check
-
-# Save results
-python -m domain_finder.cli generate --count 50 --check --output results.json
-```
+🎨 **Clean UI**
+- Modern design with Tailwind CSS
+- Responsive layout (settings left/right, results below)
+- Form controls for all generator/checker options
+- Info boxes explaining how checks work
 
 ## How It Works
 
-### The DNS Resolution Method
+### Generation Pipeline
+1. Configure patterns, length, constraints
+2. Generate pronounceable names using phonetic rules
+3. Apply prefixes, suffixes, excluded letters, forbidden bigrams
+4. Add TLDs (com, io, co, etc.)
 
-Unlike HTTP-based checks that fail on parked domains, Domain Finder uses **DNS resolution** to definitively determine availability:
+### Checking Pipeline (Multi-Stage for High Confidence)
 
-1. **Taken Domain**: Successfully resolves to an IP address → Registered
-2. **Available Domain**: DNS lookup fails with "nodename not found" → Available
-3. **Unknown**: DNS timeout or error → Requires manual verification
+#### Stage 1: DNS (Fastest)
+Uses **Cloudflare DoH JSON API**: `https://cloudflare-dns.com/dns-query?name=example.com&type=A`
+- Query types: A, AAAA, CNAME, MX
+- If Answer records exist → DNS configured → likely TAKEN
+- If NXDOMAIN (Status 3) → no DNS → might be AVAILABLE
 
-This method is:
-- ✓ Works on all registered domains (active, parked, squatted)
-- ✓ Direct check against authoritative nameservers
-- ✓ No false positives from parking pages
-- ✓ Instant feedback
+#### Stage 2: RDAP (Most Authoritative for .com/.net)
+Uses **Verisign RDAP**: `https://rdap.verisign.com/com/v1/domain/example.com`
+- **200 OK** → Domain registered → TAKEN (HIGH confidence)
+- **404** → Domain NOT found in registry → AVAILABLE (HIGH confidence)
+- Only for .com/.net (most reliable registries)
 
-## Project Structure
+#### Stage 3: HTTP (Optional, Supporting Evidence)
+HEAD request to `https://domain.tld`
+- If resolves → TAKEN (supporting evidence)
+- If timeout/error → AVAILABLE (supporting evidence)
+- **Note**: Not definitive on its own; used as tiebreaker
 
-```
-domain-finder/
-├── src/domain_finder/         # Main package
-│   ├── __init__.py
-│   ├── generator.py           # Name generation logic
-│   ├── checker.py             # DNS availability checking
-│   ├── models.py              # Data models
-│   ├── config.py              # Configuration
-│   └── utils.py               # Helper functions
-├── cli.py                     # Command-line interface
-├── tests/                     # Unit & integration tests
-├── examples/                  # Usage examples
-├── DOMAIN_FINDER_PROJECT.md   # Detailed project specification
-├── requirements.txt
-├── setup.py
-└── README.md
-```
+## Tech Stack
 
-## Development
+- **Framework**: Next.js 14 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Form Validation**: Zod
+- **External APIs**: Cloudflare DoH, Verisign RDAP
+- **Testing**: Jest + React Testing Library
+- **Deployment**: Vercel
 
-### Setting Up Dev Environment
+## Installation & Local Development
 
-```bash
-# Create virtual environment
-python -m venv venv
-source venv/Scripts/activate  # On Windows: venv\Scripts\activate
+### Prerequisites
+- Node.js 18+ (LTS recommended)
+- npm or yarn
 
-# Install dependencies + dev tools
-pip install -r requirements.txt
-pip install pytest pytest-cov black flake8
-```
-
-### Running Tests
+### Setup
 
 ```bash
-pytest tests/
-pytest tests/ --cov=src/domain_finder  # With coverage
+# Clone the repo
+git clone https://github.com/peasea123/domain-finder.git
+cd domain-finder
+
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
 ```
 
-### Code Style
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### Development Commands
 
 ```bash
-black src/
-flake8 src/
+# Development server (with hot reload)
+npm run dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
+
+# Run tests
+npm test
+
+# Watch tests
+npm run test:watch
+
+# Lint code
+npm run lint
 ```
 
-## Project Phases
+## Usage
 
-### Phase 1: MVP (Current)
-- [x] Project setup
-- [ ] Name generation (CVCCVC patterns)
-- [ ] DNS availability checking
-- [ ] CLI interface
-- [ ] Basic testing
+### Web UI (Recommended)
 
-### Phase 2: Enhancement
-- [ ] Advanced generation strategies
-- [ ] Async/parallel optimization
-- [ ] HTML reporting
-- [ ] CSV export
+1. **Configure Generator Settings**
+   - Set count (how many domains to generate)
+   - Choose name length (3-12 characters)
+   - Select pattern template (CVCV, CVCC, etc.)
+   - Add TLDs (com, io, co, net, etc.)
+   - Optional: prefix, suffix, excluded letters, forbidden bigrams, allow doubles
 
-### Phase 3: Production
-- [ ] REST API
-- [ ] Web UI
-- [ ] User accounts
-- [ ] Advanced features (WHOIS, pricing, etc.)
+2. **Configure Checker Settings**
+   - Set timeout per check (1-30 seconds)
+   - Concurrency limit (1-50 parallel)
+   - Enable/disable RDAP (recommended ON for .com/.net)
+   - Enable/disable HTTP check (optional, slower)
+   - Set retries for failed checks
 
-See [DOMAIN_FINDER_PROJECT.md](DOMAIN_FINDER_PROJECT.md) for complete specifications.
+3. **Click "Generate + Check"**
+   - Domains are generated and checked in parallel
+   - Real-time statistics (Available/Taken/Unknown)
+   - Results table with sorting and filtering
 
-## Examples
+4. **Export Results**
+   - Download as CSV (spreadsheet-friendly)
+   - Download as JSON (for script processing)
 
-See the `examples/` directory for more detailed usage patterns:
-- `basic_usage.py` - Simple generation and checking
-- `batch_processing.py` - Processing hundreds of domains
-- `custom_patterns.py` - Using custom naming patterns
+### API Usage
 
-## Configuration
+#### Generate Domains
 
-Create a `config.json` in the project root:
-
-```json
-{
-  "generation": {
-    "default_count": 50,
-    "max_parallel_workers": 5
-  },
-  "checking": {
-    "timeout_seconds": 3,
-    "retry_attempts": 2
-  },
-  "tlds": {
-    "common": ["com", "io", "co"],
-    "country": ["in", "uk"]
-  }
-}
+```bash
+curl -X POST http://localhost:3000/api/generate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "count": 50,
+    "length": 4,
+    "pattern": "CVCV",
+    "tlds": ["com", "io"],
+    "allowDoubles": false
+  }'
 ```
 
-## API Reference
+#### Check Domains
 
-### NameGenerator
-
-```python
-generator = NameGenerator()
-
-# Basic generation
-names = generator.generate(count=50, length=4)
-
-# With constraints
-names = generator.generate(
-    count=100,
-    length=5,
-    pattern="CVCCVC",      # C=consonant, V=vowel
-    prefix="br",
-    suffix="lo",
-    tlds=["com", "io", "app"]
-)
+```bash
+curl -X POST http://localhost:3000/api/check \
+  -H "Content-Type: application/json" \
+  -d '{
+    "domains": ["example.com", "test.io"],
+    "config": {
+      "timeout_ms": 5000,
+      "concurrency": 5,
+      "enableRDAP": true,
+      "enableHTTP": false
+    }
+  }'
 ```
 
-### AvailabilityChecker
+#### Generate + Check (Full Pipeline)
 
-```python
-checker = AvailabilityChecker(max_workers=5, timeout=3)
-
-# Check single domain
-result = checker.check("example.com")
-# Returns: {"domain": "example.com", "status": "AVAILABLE|TAKEN|UNKNOWN", "ip": "xxx.xxx.xxx.xxx"}
-
-# Check batch
-results = checker.check_batch(["example.com", "test.io", "sample.co"])
+```bash
+curl -X POST http://localhost:3000/api/run \
+  -H "Content-Type: application/json" \
+  -d '{
+    "generateConfig": {
+      "count": 50,
+      "length": 4,
+      "pattern": "CVCV",
+      "tlds": ["com"]
+    },
+    "checkerConfig": {
+      "timeout_ms": 5000,
+      "concurrency": 5,
+      "enableRDAP": true
+    }
+  }'
 ```
 
-## Contributing
+## Deployment on Vercel
 
-Contributions welcome! Please:
-1. Fork the repository
-2. Create a feature branch
-3. Write tests for new functionality
-4. Submit a pull request
+### One-Click Deploy
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fpeasea123%2Fdomain-finder)
+
+### Manual Deployment
+
+```bash
+# Install Vercel CLI
+npm install -g vercel
+
+# Deploy
+vercel
+
+# Deploy to production
+vercel --prod
+```
+
+### Environment Notes
+
+- **Serverless Functions**: Configured with 60-second timeout (Vercel Pro plan)
+- **API Calls**: All external calls are to public endpoints (Cloudflare, Verisign)
+- **No Secrets Required**: No API keys, tokens, or auth headers needed
+- **Rate Limiting**: Cloudflare and Verisign may rate-limit if checking excessive domains
+
+### Limits & Recommendations
+
+- **Max Domains per Request**: 500 (enforced by serverless timeout)
+- **Recommended Concurrency**: 5-10 (balances speed vs. rate limiting)
+- **Timeout per Check**: 5 seconds (Cloudflare + RDAP responsive in <1s typically)
+- **Stop-After-N**: Use to find available domains faster without checking all
+
+## Privacy & Security
+
+✅ **Privacy Guarantees**
+- No user secrets, keys, or sensitive data required
+- Domains are only sent to public DNS, RDAP, and HTTP endpoints
+- No tracking, analytics, or storage of results
+- All computation happens server-side on your Vercel instance or locally
+
+✅ **Public APIs Used**
+- Cloudflare DoH JSON (public, no auth)
+- Verisign RDAP (public, no auth)
+- Standard HTTPS for all connections
+
+## Testing
+
+Unit tests for generator patterns and checker verdict logic:
+
+```bash
+npm test
+```
+
+Tests cover:
+- Pattern generation (CVCV, CVCC, etc.)
+- Constraints (prefixes, suffixes, excluded letters, forbidden bigrams)
+- Seeded reproducibility
+- Verdict determination from signals (DNS, RDAP, HTTP)
+- Confidence level calculation
+
+## Architecture
+
+```
+src/
+  ├── app/
+  │   ├── api/
+  │   │   ├── generate/route.ts    # POST /api/generate
+  │   │   ├── check/route.ts       # POST /api/check
+  │   │   └── run/route.ts         # POST /api/run
+  │   ├── layout.tsx
+  │   ├── page.tsx                 # Main UI
+  │   └── globals.css
+  ├── components/
+  │   ├── GeneratorSettings.tsx    # Generator config UI
+  │   ├── CheckerSettings.tsx      # Checker config UI
+  │   └── ResultsTabs.tsx          # Results table & export
+  └── lib/
+      ├── generator.ts            # Core generation logic
+      ├── generator.test.ts
+      ├── checker.ts              # Core checker logic
+      ├── checker.test.ts
+      ├── schema.ts               # Zod validation schemas
+      └── export.ts               # CSV/JSON export utilities
+```
+
+## Future Enhancements
+
+- [ ] RDAP bootstrap for other TLDs (.io, .co, etc.)
+- [ ] Bulk import from CSV/paste
+- [ ] Save/load presets for generation & checking configs
+- [ ] Advanced filtering: by TLD, by length, by pattern similarity
+- [ ] Pricing lookup integration (WHOIS price quotes)
+- [ ] Email notifications for findings
+- [ ] Database storage of checked domains (optional backend)
 
 ## License
 
-MIT License - see LICENSE file for details
+MIT License - see [LICENSE](LICENSE)
 
-## Roadmap
+## Contributing
 
-- [ ] WHOIS integration
-- [ ] Domain marketplace pricing
-- [ ] Alternative TLD suggestions
-- [ ] Trademark checking
-- [ ] Expired domain detection
-- [ ] Web interface
-- [ ] Package on PyPI
+Contributions welcome! Please open issues or submit PRs on GitHub.
 
 ## Support
 
-For issues, questions, or suggestions, please open a GitHub issue.
+For issues, questions, or feature requests, open an issue on [GitHub Issues](https://github.com/peasea123/domain-finder/issues).
 
 ---
 
-**Getting Started**: Read [DOMAIN_FINDER_PROJECT.md](DOMAIN_FINDER_PROJECT.md) for detailed project specification and implementation guide.
-
-**Created**: February 2026
+**Built with ❤️ using Next.js 14, TypeScript, Tailwind CSS, and public APIs.**

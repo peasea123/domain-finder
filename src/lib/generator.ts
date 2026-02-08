@@ -193,3 +193,88 @@ export async function generateDomains(config: GeneratorConfig): Promise<Generato
   const generator = createGenerator(config.seed);
   return generator.generate(config);
 }
+
+/**
+ * Generate ALL possible combinations for a pattern (cartesian product)
+ * Used for comprehensive domain checking without randomization
+ * WARNING: Can produce very large arrays (e.g., CVCV = 11,025 combinations)
+ */
+export function generateAllCombinations(pattern: PatternTemplate): string[] {
+  const vowels = ["a", "e", "i", "o", "u"];
+  const consonants = ["b", "c", "d", "f", "g", "h", "j", "k", "l", "m", "n", "p", "q", "r", "s", "t", "v", "w", "x", "z"];
+
+  const combinations: string[] = [];
+
+  // Generate based on pattern
+  if (pattern === "CVCV") {
+    // 4-letter: C1 V1 C2 V2
+    for (const c1 of consonants) {
+      for (const v1 of vowels) {
+        for (const c2 of consonants) {
+          for (const v2 of vowels) {
+            combinations.push(`${c1}${v1}${c2}${v2}`);
+          }
+        }
+      }
+    }
+  } else if (pattern === "CVCC") {
+    // 4-letter: C1 V1 C2 C3
+    for (const c1 of consonants) {
+      for (const v1 of vowels) {
+        for (const c2 of consonants) {
+          for (const c3 of consonants) {
+            combinations.push(`${c1}${v1}${c2}${c3}`);
+          }
+        }
+      }
+    }
+  } else if (pattern === "VCVC") {
+    // 4-letter: V1 C1 V2 C2
+    for (const v1 of vowels) {
+      for (const c1 of consonants) {
+        for (const v2 of vowels) {
+          for (const c2 of consonants) {
+            combinations.push(`${v1}${c1}${v2}${c2}`);
+          }
+        }
+      }
+    }
+  } else if (pattern === "CVVC") {
+    // 4-letter: C1 V1 V2 C2
+    for (const c1 of consonants) {
+      for (const v1 of vowels) {
+        for (const v2 of vowels) {
+          for (const c2 of consonants) {
+            combinations.push(`${c1}${v1}${v2}${c2}`);
+          }
+        }
+      }
+    }
+  } else if (pattern === "CCVC") {
+    // 4-letter: C1 C2 V1 C3
+    for (const c1 of consonants) {
+      for (const c2 of consonants) {
+        for (const v1 of vowels) {
+          for (const c3 of consonants) {
+            combinations.push(`${c1}${c2}${v1}${c3}`);
+          }
+        }
+      }
+    }
+  } else if (pattern === "CVCVC") {
+    // 5-letter: C1 V1 C2 V2 C3
+    for (const c1 of consonants) {
+      for (const v1 of vowels) {
+        for (const c2 of consonants) {
+          for (const v2 of vowels) {
+            for (const c3 of consonants) {
+              combinations.push(`${c1}${v1}${c2}${v2}${c3}`);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return combinations;
+}

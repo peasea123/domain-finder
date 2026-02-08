@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { GeneratorSettings } from "@/components/GeneratorSettings";
 import { CheckerSettings } from "@/components/CheckerSettings";
 import { ResultsTabs } from "@/components/ResultsTabs";
+import { BatchCheckAll } from "@/components/BatchCheckAll";
 import { GenerateRequest, CheckerConfig } from "@/lib/schema";
 import { CheckResult } from "@/lib/checker";
 
@@ -146,6 +147,11 @@ export default function Home() {
             </p>
           </div>
         )}
+
+        {/* Batch Check All Section */}
+        <div className="mb-16">
+          <BatchCheckAll />
+        </div>
       </div>
 
       {/* Footer */}

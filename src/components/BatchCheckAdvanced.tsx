@@ -128,6 +128,9 @@ export function BatchCheckAdvanced() {
     setSession(newSession);
     setBatchCount((prev) => prev + 1);
 
+    // Build list of already-attempted domain names for deduplication
+    const skippedDomains = attemptedDomains.map((d) => d.domain);
+
     try {
       const response = await fetch("/api/batch-check", {
         method: "POST",
@@ -147,6 +150,7 @@ export function BatchCheckAdvanced() {
             random: newSession.random,
             seed: newSession.seed,
           },
+          skippedDomains,
         }),
         signal: controller.signal,
       });
@@ -175,18 +179,13 @@ export function BatchCheckAdvanced() {
 
           try {
             const result = JSON.parse(line);
-            currentBatchAttempted.push(result);
-
-            // Check for duplicates within session
-            const isDuplicate = attemptedDomains.some(
-              (d) => d.domain === result.domain
-            );
-            if (isDuplicate) {
-              setError(
-                `Warning: Domain ${result.domain} was already checked in a previous batch of this session. Deduplication may have failed.`
-              );
+            
+            // Skip completion/status messages
+            if (result.status === "complete") {
+              continue;
             }
 
+            currentBatchAttempted.push(result);
             setTotalCheckedOverall((prev) => prev + 1);
             setRecentDomains((prev) => [result, ...prev.slice(0, 9)]);
 

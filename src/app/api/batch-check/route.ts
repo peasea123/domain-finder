@@ -22,6 +22,7 @@ interface BatchCheckRequest {
     random?: boolean;
     seed?: number;
   };
+  skippedDomains?: string[]; // List of already-attempted domains to skip
 }
 
 export async function POST(request: NextRequest) {
@@ -54,13 +55,23 @@ export async function POST(request: NextRequest) {
           return;
         }
 
+        // Create set of skipped domains for fast lookup
+        const skippedSet = new Set(body.skippedDomains || []);
+
         let checked = 0;
+        let skipped = 0;
         const encoder = new TextEncoder();
 
         // Check each combination with each TLD
         for (const combo of combinations) {
           for (const tld of body.tlds) {
             const domain = `${combo}.${tld}`;
+
+            // Skip if already checked in previous batches
+            if (skippedSet.has(domain)) {
+              skipped++;
+              continue;
+            }
 
             try {
               // Check domain with provided config
@@ -102,7 +113,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Send completion signal
-        const completion = { status: "complete", checked };
+        const completion = { status: "complete", checked, skipped };
         controller.enqueue(encoder.encode(JSON.stringify(completion) + "\n"));
 
         controller.close();

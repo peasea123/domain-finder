@@ -104,9 +104,10 @@ async function checkRDAP(domain) {
 
 /**
  * Determine verdict from signals
+ * RDAP is authoritative for .com, but if it fails, we cannot determine availability
  */
 function determineVerdict(dnsResult, rdapResult) {
-  // RDAP is authoritative for .com
+  // RDAP is authoritative for .com - only trust if no error
   if (rdapResult && !rdapResult.error) {
     if (rdapResult.registered) {
       return { verdict: "TAKEN", confidence: "HIGH" };
@@ -115,11 +116,20 @@ function determineVerdict(dnsResult, rdapResult) {
     }
   }
 
-  // Fall back to DNS
+  // If RDAP failed/timed out, we cannot determine availability reliably
+  if (rdapResult && rdapResult.error) {
+    // RDAP failed - return UNKNOWN regardless of DNS
+    // (DNS absence doesn't prove availability if RDAP is also failing)
+    return { verdict: "UNKNOWN", confidence: "LOW" };
+  }
+
+  // Fall back to DNS only if RDAP wasn't checked
   if (dnsResult && dnsResult.found) {
     return { verdict: "TAKEN", confidence: "MEDIUM" };
   } else if (dnsResult && !dnsResult.error && !dnsResult.found) {
-    return { verdict: "AVAILABLE", confidence: "MEDIUM" };
+    // Only mark as AVAILABLE if DNS is reliable and checked
+    // Note: This is weaker confidence than RDAP
+    return { verdict: "AVAILABLE", confidence: "LOW" };
   }
 
   return { verdict: "UNKNOWN", confidence: "LOW" };

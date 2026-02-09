@@ -326,11 +326,14 @@ function determineVerdict(
     }
     if (rdapStatus === undefined) {
       // RDAP timed out or failed
-      // Fall back to DNS: if DNS found, it's taken
+      // NOTE: We cannot confidently determine availability without RDAP!
+      // Even if DNS is absent, the domain could be recently registered,
+      // parked without DNS resolution, or have private RDAP data
       if (dnsRecordFound) {
+        // If DNS exists, definitely taken
         return { verdict: "TAKEN", confidence: "MEDIUM" };
       }
-      // No evidence either way
+      // RDAP failed: DNS absent is not enough to claim available
       return { verdict: "UNKNOWN", confidence: "LOW" };
     }
   }
@@ -347,5 +350,6 @@ function determineVerdict(
   }
 
   // No DNS found and no other positive signals
-  return { verdict: "AVAILABLE", confidence: "MEDIUM" };
+  // Still cautious - only LOW confidence on DNS alone
+  return { verdict: "AVAILABLE", confidence: "LOW" };
 }

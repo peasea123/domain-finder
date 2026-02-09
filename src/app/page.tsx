@@ -200,11 +200,11 @@ export default function Home() {
           </div>
 
           {/* Right side: large logo */}
-          <div className="flex-shrink-0 flex items-center pl-6">
+          <div className="flex-shrink-0 flex items-center pl-6 -my-1">
             <img
               src="/android-chrome-512x512.png"
               alt="QIKAZ"
-              className="h-[72px] w-auto object-contain"
+              className="h-[68px] w-auto object-contain"
             />
           </div>
         </div>

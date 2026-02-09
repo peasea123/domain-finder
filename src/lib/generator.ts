@@ -197,84 +197,50 @@ export async function generateDomains(config: GeneratorConfig): Promise<Generato
 /**
  * Generate ALL possible combinations for a pattern (cartesian product)
  * Used for comprehensive domain checking without randomization
- * WARNING: Can produce very large arrays (e.g., CVCV = 11,025 combinations)
+ * Expands pattern to match desired length (e.g., CVCV->CVCVCV for length 6)
+ * WARNING: Can produce very large arrays (grows exponentially with length)
+ * Examples:
+ *   CVCV at length 4 = 20 × 5 × 20 × 5 = 10,000 (20 consonants, 5 vowels from y-less set - actually counted as 20 in code)
+ *   CVCV at length 6 = 20^3 × 5^3 = 1,000,000 (exponential growth!)
+ *   CVCV at length 8 = 20^4 × 5^4 = 100,000,000 (be careful!)
  */
-export function generateAllCombinations(pattern: PatternTemplate): string[] {
+export function generateAllCombinations(pattern: PatternTemplate, length: number): string[] {
   const vowels = ["a", "e", "i", "o", "u"];
   const consonants = ["b", "c", "d", "f", "g", "h", "j", "k", "l", "m", "n", "p", "q", "r", "s", "t", "v", "w", "x", "z"];
 
+  // Expand pattern to match desired length by repeating it
+  let expandedPattern = "";
+  while (expandedPattern.length < length) {
+    expandedPattern += pattern;
+  }
+  expandedPattern = expandedPattern.slice(0, length);
+
+  // Build indices: C->0, V->1 (to track which loop level uses consonants vs vowels)
+  const patternIndices = expandedPattern.split("").map((char) => (char === "C" ? 0 : 1));
+
   const combinations: string[] = [];
 
-  // Generate based on pattern
-  if (pattern === "CVCV") {
-    // 4-letter: C1 V1 C2 V2
-    for (const c1 of consonants) {
-      for (const v1 of vowels) {
-        for (const c2 of consonants) {
-          for (const v2 of vowels) {
-            combinations.push(`${c1}${v1}${c2}${v2}`);
-          }
-        }
-      }
+  // Generate using nested loops - one level per character
+  // This is a generic cartesian product generator
+  const generate = (index: number, current: string): void => {
+    if (index === expandedPattern.length) {
+      combinations.push(current);
+      return;
     }
-  } else if (pattern === "CVCC") {
-    // 4-letter: C1 V1 C2 C3
-    for (const c1 of consonants) {
-      for (const v1 of vowels) {
-        for (const c2 of consonants) {
-          for (const c3 of consonants) {
-            combinations.push(`${c1}${v1}${c2}${c3}`);
-          }
-        }
-      }
-    }
-  } else if (pattern === "VCVC") {
-    // 4-letter: V1 C1 V2 C2
-    for (const v1 of vowels) {
-      for (const c1 of consonants) {
-        for (const v2 of vowels) {
-          for (const c2 of consonants) {
-            combinations.push(`${v1}${c1}${v2}${c2}`);
-          }
-        }
-      }
-    }
-  } else if (pattern === "CVVC") {
-    // 4-letter: C1 V1 V2 C2
-    for (const c1 of consonants) {
-      for (const v1 of vowels) {
-        for (const v2 of vowels) {
-          for (const c2 of consonants) {
-            combinations.push(`${c1}${v1}${v2}${c2}`);
-          }
-        }
-      }
-    }
-  } else if (pattern === "CCVC") {
-    // 4-letter: C1 C2 V1 C3
-    for (const c1 of consonants) {
-      for (const c2 of consonants) {
-        for (const v1 of vowels) {
-          for (const c3 of consonants) {
-            combinations.push(`${c1}${c2}${v1}${c3}`);
-          }
-        }
-      }
-    }
-  } else if (pattern === "CVCVC") {
-    // 5-letter: C1 V1 C2 V2 C3
-    for (const c1 of consonants) {
-      for (const v1 of vowels) {
-        for (const c2 of consonants) {
-          for (const v2 of vowels) {
-            for (const c3 of consonants) {
-              combinations.push(`${c1}${v1}${c2}${v2}${c3}`);
-            }
-          }
-        }
-      }
-    }
-  }
 
+    if (patternIndices[index] === 0) {
+      // Consonant position
+      for (const c of consonants) {
+        generate(index + 1, current + c);
+      }
+    } else {
+      // Vowel position
+      for (const v of vowels) {
+        generate(index + 1, current + v);
+      }
+    }
+  };
+
+  generate(0, "");
   return combinations;
 }

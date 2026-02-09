@@ -30,8 +30,8 @@ export async function POST(request: NextRequest) {
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        // Generate all combinations
-        const combinations = generateAllCombinations(body.pattern as any);
+        // Generate all combinations for the specified pattern and length
+        const combinations = generateAllCombinations(body.pattern as any, body.length);
 
         if (combinations.length === 0) {
           controller.enqueue(`{"error": "No combinations generated"}\n`);

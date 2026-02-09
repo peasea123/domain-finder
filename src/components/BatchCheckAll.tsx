@@ -23,28 +23,36 @@ export function BatchCheckAll({ onResultsUpdate }: BatchCheckAllProps) {
 
   const calculateTotal = () => {
     const vowels = 5; // a, e, i, o, u
-    const consonants = 21; // all except 'y'
-    
+    const consonants = 20; // all except 'y'
 
-    const patternCounts: Record<string, number> = {
-      CVCV: consonants * vowels * consonants * vowels,
-      CVCC: consonants * vowels * consonants * consonants,
-      VCVC: vowels * consonants * vowels * consonants,
-      CVCVC: consonants * vowels * consonants * vowels * consonants,
-      CVVC: consonants * vowels * vowels * consonants,
-      CCVC: consonants * consonants * vowels * consonants,
-    };
+    // Expand pattern to match desired length
+    let expandedPattern = "";
+    while (expandedPattern.length < length) {
+      expandedPattern += pattern;
+    }
+    expandedPattern = expandedPattern.slice(0, length);
 
-    let total = patternCounts[pattern];
+    // Count consonants and vowels in expanded pattern
+    const consonantCount = (expandedPattern.match(/C/g) || []).length;
+    const vowelCount = (expandedPattern.match(/V/g) || []).length;
+
+    // Calculate combinations for this length
+    let total = Math.pow(consonants, consonantCount) * Math.pow(vowels, vowelCount);
+
+    // Multiply by TLD count
     const tldCount = tlds.split(",").filter((t) => t.trim()).length;
     total *= tldCount;
-    return total;
+
+    return Math.floor(total);
   };
 
   const estimatedTime = () => {
     const total = calculateTotal();
-    const estimatedSeconds = (total / 40) * 1.5; // 40 req/sec, 1.5s batch delays
-    const minutes = Math.ceil(estimatedSeconds / 60);
+    // 40 req/sec, plus 1.5s batch delays for every 50 domains
+    const requestTime = total / 40; // seconds
+    const batchDelays = (Math.ceil(total / 50) - 1) * 1.5; // seconds
+    const totalSeconds = requestTime + batchDelays;
+    const minutes = Math.ceil(totalSeconds / 60);
     return minutes;
   };
 
@@ -133,20 +141,38 @@ export function BatchCheckAll({ onResultsUpdate }: BatchCheckAllProps) {
         <div className="space-y-3">
           <div className="p-4 bg-yellow-50 border border-yellow-300 rounded-lg">
             <p className="text-sm text-yellow-800">
-              <strong>⏱️ Time Warning:</strong> This will check <strong>{calculateTotal().toLocaleString()}</strong> domains and take approximately <strong>{estimatedTime()} minutes</strong>. Make sure you&apos;re ready to wait!
+              <strong>⏱️ Domains to Check:</strong> <strong>{calculateTotal().toLocaleString()}</strong> combinations
+            </p>
+            <p className="text-xs text-yellow-700 mt-1">
+              Estimated time: <strong>{estimatedTime()} minute{estimatedTime() !== 1 ? 's' : ''}</strong> at 40 req/sec
             </p>
           </div>
-          {estimatedTime() > 5 && (
+
+          {calculateTotal() > 100000 && (
+            <div className="p-4 bg-orange-50 border border-orange-400 rounded-lg">
+              <p className="text-sm text-orange-900 font-semibold">⚠️ Exponential Growth Warning</p>
+              <p className="text-sm text-orange-800 mt-2">
+                You&apos;re requesting <strong>{calculateTotal().toLocaleString()}</strong> domains. This will take <strong>{estimatedTime()} minutes</strong>.
+              </p>
+              <p className="text-xs text-orange-700 mt-2">
+                Pattern growth is exponential. Each additional letter roughly multiplies the time by 4-5x. Consider:
+              </p>
+              <ul className="text-xs text-orange-700 mt-1 list-disc list-inside space-y-1">
+                <li>Starting with a shorter length (3-5 letters)</li>
+                <li>Using the <strong>CLI script</strong> for large batches (no timeout)</li>
+                <li>Running during off-hours to avoid rate limits</li>
+              </ul>
+            </div>
+          )}
+
+          {estimatedTime() > 5 && calculateTotal() <= 100000 && (
             <div className="p-4 bg-red-50 border border-red-300 rounded-lg">
               <p className="text-sm text-red-800">
-                <strong>⚠️ Timeout Warning:</strong> Your estimated time ({estimatedTime()} min) exceeds the 5-minute browser timeout. For large batches, use the <strong>CLI script</strong> instead:
+                <strong>⚠️ Timeout Warning:</strong> Your estimated time ({estimatedTime()} min) exceeds the 5-minute browser timeout. Use the <strong>CLI</strong>:
               </p>
               <code className="block bg-red-100 p-2 rounded mt-2 text-xs font-mono text-red-900">
                 node scripts/batch-check-cvcv-simple.js
               </code>
-              <p className="text-xs text-red-700 mt-2">
-                The CLI runs locally without time limits and is recommended for CVCV or larger patterns.
-              </p>
             </div>
           )}
         </div>

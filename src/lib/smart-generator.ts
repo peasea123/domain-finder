@@ -122,6 +122,7 @@ function generateOneName(
       prevUnits: usedUnits,
       builtString,
       style,
+      pattern,
     });
 
     if (candidates.length === 0) return null;

@@ -139,6 +139,7 @@ export function getWeightedUnitsForSlot(options: {
   prevUnits: string[];
   builtString: string;
   style: StylePreset;
+  pattern: string;
 }): { unit: string; weight: number; charLen: number }[] {
   const config = loadHeuristicsConfig();
   const {
@@ -150,12 +151,18 @@ export function getWeightedUnitsForSlot(options: {
     prevUnits,
     builtString,
     style,
+    pattern,
   } = options;
 
   const isInitial = slotIndex === 0;
   const isFinal = slotIndex === totalSlots - 1;
   const remainingSlots = totalSlots - slotIndex - 1; // slots AFTER this one
   const remainingCharsNeeded = targetLen - currentChars;
+
+  // Detect adjacent-vowel context (VV in pattern)
+  const prevSlotIsV = slotIndex > 0 && pattern[slotIndex - 1] === "V";
+  const nextSlotIsV = slotIndex < totalSlots - 1 && pattern[slotIndex + 1] === "V";
+  const inAdjacentVowelContext = slotType === "V" && (prevSlotIsV || nextSlotIsV);
 
   const pool = slotType === "C" ? config.consonantUnits : config.vowelUnits;
   const preset = config.stylePresets[style];
@@ -177,6 +184,23 @@ export function getWeightedUnitsForSlot(options: {
     } else {
       // This is the last slot — must use exactly the remaining chars
       if (entry.charLen !== remainingCharsNeeded) continue;
+    }
+
+    // ── Adjacent-vowel constraints ──
+    // When two V slots are adjacent (VV in pattern), restrict to single
+    // vowels only — the pair of singles naturally forms the digraph.
+    // This prevents ugly combos like "aioo", "ooea", "eear".
+    if (inAdjacentVowelContext && entry.category !== "single") {
+      continue;
+    }
+
+    // Block same-vowel repetition at VV junction (prevents "uu", "aa", "oo")
+    if (inAdjacentVowelContext && prevSlotIsV && prevUnits.length > 0) {
+      const lastUnit = prevUnits[prevUnits.length - 1];
+      // If previous unit was a single vowel, block the same vowel
+      if (lastUnit.length === 1 && "aeiou".includes(lastUnit) && entry.unit === lastUnit) {
+        continue;
+      }
     }
 
     // ── Hard constraints ──

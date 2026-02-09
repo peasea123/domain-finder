@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { GeneratorSettings } from "@/components/GeneratorSettings";
 import { CheckerSettings } from "@/components/CheckerSettings";
 import { ResultsTabs } from "@/components/ResultsTabs";
-import { BatchCheckAll } from "@/components/BatchCheckAll";
+import { BatchCheckAdvanced } from "@/components/BatchCheckAdvanced";
 import { BatchCheckResults } from "@/components/BatchCheckResults";
 import { GenerateRequest, CheckerConfig } from "@/lib/schema";
 import { CheckResult } from "@/lib/checker";
@@ -151,7 +151,7 @@ export default function Home() {
 
         {/* Batch Check All Section */}
         <div className="mb-16">
-          <BatchCheckAll />
+          <BatchCheckAdvanced />
         </div>
 
         {/* Batch Check Results Section */}

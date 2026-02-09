@@ -8,13 +8,19 @@ import { checkDomain, CheckResult } from "@/lib/checker";
 export const maxDuration = 300;
 
 interface BatchCheckRequest {
-  pattern: "CVCV" | "CVCC" | "VCVC" | "CVCVC" | "CVVC" | "CCVC";
+  pattern: string; // Can be standard (CVCV, CVCC, etc.) or custom (VVCVCVV, "a"CVC, etc.)
   length: number;
   tlds: string[];
   config: {
     timeout_ms: number;
     enableRDAP: boolean;
     enableHTTP: boolean;
+  };
+  options?: {
+    offset?: number;
+    limit?: number;
+    random?: boolean;
+    seed?: number;
   };
 }
 
@@ -31,7 +37,16 @@ export async function POST(request: NextRequest) {
     async start(controller) {
       try {
         // Generate all combinations for the specified pattern and length
-        const combinations = generateAllCombinations(body.pattern as any, body.length);
+        // Limited to 1000 at a time to avoid timeout
+        const limit = 1000;
+        const offset = body.options?.offset || 0;
+
+        const combinations = generateAllCombinations(body.pattern, body.length, {
+          offset,
+          limit,
+          random: body.options?.random || false,
+          seed: body.options?.seed,
+        });
 
         if (combinations.length === 0) {
           controller.enqueue(`{"error": "No combinations generated"}\n`);

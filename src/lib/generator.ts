@@ -197,14 +197,28 @@ export async function generateDomains(config: GeneratorConfig): Promise<Generato
 /**
  * Generate ALL possible combinations for a pattern (cartesian product)
  * Used for comprehensive domain checking without randomization
- * Expands pattern to match desired length (e.g., CVCV->CVCVCV for length 6)
- * WARNING: Can produce very large arrays (grows exponentially with length)
+ * Supports custom patterns, constraints, and pagination
+ * 
+ * Pattern notation:
+ *   C = any consonant
+ *   V = any vowel
+ *   Any letter (a-z) = that specific letter (constraint)
+ * 
  * Examples:
- *   CVCV at length 4 = 20 × 5 × 20 × 5 = 10,000 (20 consonants, 5 vowels from y-less set - actually counted as 20 in code)
- *   CVCV at length 6 = 20^3 × 5^3 = 1,000,000 (exponential growth!)
- *   CVCV at length 8 = 20^4 × 5^4 = 100,000,000 (be careful!)
+ *   CVCV = any consonant-vowel-consonant-vowel
+ *   "a"CVC = starts with 'a', then any consonant-vowel-consonant
+ *   CV"e"C = consonant-vowel-'e'-consonant
  */
-export function generateAllCombinations(pattern: PatternTemplate, length: number): string[] {
+export function generateAllCombinations(
+  pattern: string,
+  length: number,
+  options?: {
+    offset?: number;
+    limit?: number;
+    random?: boolean;
+    seed?: number;
+  }
+): string[] {
   const vowels = ["a", "e", "i", "o", "u"];
   const consonants = ["b", "c", "d", "f", "g", "h", "j", "k", "l", "m", "n", "p", "q", "r", "s", "t", "v", "w", "x", "z"];
 
@@ -215,26 +229,51 @@ export function generateAllCombinations(pattern: PatternTemplate, length: number
   }
   expandedPattern = expandedPattern.slice(0, length);
 
-  // Build indices: C->0, V->1 (to track which loop level uses consonants vs vowels)
-  const patternIndices = expandedPattern.split("").map((char) => (char === "C" ? 0 : 1));
+  // Parse pattern to identify constraints and variable positions
+  const positions: {
+    type: "consonant" | "vowel" | "fixed";
+    value?: string;
+  }[] = [];
+
+  let i = 0;
+  while (i < expandedPattern.length) {
+    const char = expandedPattern[i];
+
+    if (char === '"' && i + 2 < expandedPattern.length && expandedPattern[i + 2] === '"') {
+      // Fixed letter: "a", "b", etc.
+      positions.push({ type: "fixed", value: expandedPattern[i + 1] });
+      i += 3;
+    } else if (char === "C") {
+      positions.push({ type: "consonant" });
+      i += 1;
+    } else if (char === "V") {
+      positions.push({ type: "vowel" });
+      i += 1;
+    } else {
+      // Assume it's a fixed letter (no quotes)
+      positions.push({ type: "fixed", value: char });
+      i += 1;
+    }
+  }
 
   const combinations: string[] = [];
 
   // Generate using nested loops - one level per character
-  // This is a generic cartesian product generator
   const generate = (index: number, current: string): void => {
-    if (index === expandedPattern.length) {
+    if (index === positions.length) {
       combinations.push(current);
       return;
     }
 
-    if (patternIndices[index] === 0) {
-      // Consonant position
+    const pos = positions[index];
+
+    if (pos.type === "fixed") {
+      generate(index + 1, current + pos.value);
+    } else if (pos.type === "consonant") {
       for (const c of consonants) {
         generate(index + 1, current + c);
       }
-    } else {
-      // Vowel position
+    } else if (pos.type === "vowel") {
       for (const v of vowels) {
         generate(index + 1, current + v);
       }
@@ -242,5 +281,26 @@ export function generateAllCombinations(pattern: PatternTemplate, length: number
   };
 
   generate(0, "");
-  return combinations;
+
+  // Apply options
+  let result = combinations;
+
+  if (options?.random) {
+    // Shuffle with optional seed
+    const rng = options.seed ? new SeededRandom(options.seed) : new SeededRandom(Date.now());
+    for (let i = result.length - 1; i > 0; i--) {
+      const j = Math.floor(rng.random() * (i + 1));
+      [result[i], result[j]] = [result[j], result[i]];
+    }
+  }
+
+  // Apply offset and limit
+  const offset = options?.offset || 0;
+  const limit = options?.limit || result.length;
+
+  if (offset > 0 || limit < result.length) {
+    result = result.slice(offset, offset + limit);
+  }
+
+  return result;
 }

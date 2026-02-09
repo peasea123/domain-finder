@@ -167,15 +167,28 @@ export default function Home() {
     <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-0">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <h1 className="text-3xl font-bold text-gray-900">Domain Finder</h1>
-          <p className="text-gray-600 text-sm mt-1">
-            Smart domain name generator with real-time availability checking via DNS, RDAP, and
-            HTTP
-          </p>
+        <div className="max-w-7xl mx-auto px-6 py-3">
+          <div className="flex items-center gap-3">
+            <img
+              src="/favicon-32x32.png"
+              alt="QIKAZ"
+              width={28}
+              height={28}
+              className="rounded"
+            />
+            <div>
+              <h1 className="text-xl font-bold tracking-tight text-gray-900">
+                QIKAZ
+                <span className="text-indigo-500 font-normal text-sm ml-2">qikaz.com</span>
+              </h1>
+              <p className="text-gray-500 text-xs">
+                Domain name generator &amp; availability checker
+              </p>
+            </div>
+          </div>
 
           {/* Tab Switcher */}
-          <div className="flex gap-1 mt-4">
+          <div className="flex gap-1 mt-3">
             {TABS.map((tab) => (
               <button
                 key={tab.key}

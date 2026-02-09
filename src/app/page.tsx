@@ -166,16 +166,10 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-0">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-3">
-          <div className="flex items-center gap-3">
-            <img
-              src="/favicon-32x32.png"
-              alt="QIKAZ"
-              width={28}
-              height={28}
-              className="rounded"
-            />
+      <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 flex items-stretch">
+          {/* Left side: branding + tabs */}
+          <div className="flex flex-col justify-between py-3 min-w-0 flex-1">
             <div>
               <h1 className="text-xl font-bold tracking-tight text-gray-900">
                 QIKAZ
@@ -185,24 +179,33 @@ export default function Home() {
                 Domain name generator &amp; availability checker
               </p>
             </div>
+
+            {/* Tab Switcher */}
+            <div className="flex gap-1 mt-3">
+              {TABS.map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-all border border-b-0 ${
+                    activeTab === tab.key
+                      ? "bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-700 border-gray-200"
+                      : "bg-gray-50 text-gray-500 hover:text-gray-700 border-transparent hover:bg-gray-100"
+                  }`}
+                >
+                  <span className="mr-1.5">{tab.emoji}</span>
+                  {tab.label}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Tab Switcher */}
-          <div className="flex gap-1 mt-3">
-            {TABS.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-all border border-b-0 ${
-                  activeTab === tab.key
-                    ? "bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-700 border-gray-200"
-                    : "bg-gray-50 text-gray-500 hover:text-gray-700 border-transparent hover:bg-gray-100"
-                }`}
-              >
-                <span className="mr-1.5">{tab.emoji}</span>
-                {tab.label}
-              </button>
-            ))}
+          {/* Right side: large logo */}
+          <div className="flex-shrink-0 flex items-center pl-6">
+            <img
+              src="/android-chrome-512x512.png"
+              alt="QIKAZ"
+              className="h-[72px] w-auto object-contain"
+            />
           </div>
         </div>
       </header>

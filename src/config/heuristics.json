@@ -1,0 +1,188 @@
+{
+  "consonantUnits": {
+    "singles": {
+      "b": 10, "c": 8, "d": 10, "f": 8, "g": 7, "h": 6,
+      "j": 3, "k": 7, "l": 12, "m": 11, "n": 12, "p": 9,
+      "r": 13, "s": 14, "t": 14, "v": 6, "w": 5, "x": 2,
+      "y": 4, "z": 3
+    },
+    "tier1Digraphs": {
+      "th": 15, "ch": 12, "sh": 12, "ph": 6, "wh": 5, "ck": 8, "ng": 10
+    },
+    "tier2Blends": {
+      "bl": 9, "br": 11, "cl": 8, "cr": 9, "dr": 10, "fl": 8, "fr": 7,
+      "gl": 6, "gr": 9, "pl": 10, "pr": 9, "sl": 7, "sm": 7, "sn": 5,
+      "sp": 10, "st": 14, "tr": 13, "tw": 5, "sk": 7, "sw": 5,
+      "sc": 6, "str": 8, "spr": 4, "scr": 3
+    },
+    "special": {
+      "qu": 5
+    }
+  },
+  "vowelUnits": {
+    "singles": {
+      "a": 15, "e": 18, "i": 14, "o": 13, "u": 8
+    },
+    "coreDigraphs": {
+      "ai": 9, "ea": 10, "ee": 7, "oa": 6, "oo": 7, "ie": 6, "ou": 5
+    },
+    "secondaryDigraphs": {
+      "au": 4, "aw": 4, "ei": 5, "ey": 5, "oy": 3, "ue": 4, "ui": 3
+    },
+    "rControlled": {
+      "ar": 8, "er": 10, "ir": 5, "or": 7, "ur": 4
+    }
+  },
+  "patternsByLength": {
+    "3": [
+      { "pattern": "CVC", "weight": 15 },
+      { "pattern": "VCV", "weight": 8 },
+      { "pattern": "CVV", "weight": 4 }
+    ],
+    "4": [
+      { "pattern": "CVCV", "weight": 15 },
+      { "pattern": "VCVC", "weight": 10 },
+      { "pattern": "CVVC", "weight": 6 },
+      { "pattern": "VCVC", "weight": 5 }
+    ],
+    "5": [
+      { "pattern": "CVCVC", "weight": 18 },
+      { "pattern": "VCVCV", "weight": 10 },
+      { "pattern": "CVVCV", "weight": 6 },
+      { "pattern": "CVCVC", "weight": 5 },
+      { "pattern": "VCVC", "weight": 4 }
+    ],
+    "6": [
+      { "pattern": "CVCVCV", "weight": 18 },
+      { "pattern": "VCVCVC", "weight": 10 },
+      { "pattern": "CVVCVC", "weight": 6 },
+      { "pattern": "CVCVVC", "weight": 5 }
+    ],
+    "7": [
+      { "pattern": "CVCVCVC", "weight": 18 },
+      { "pattern": "VCVCVCV", "weight": 10 },
+      { "pattern": "CVVCVCV", "weight": 6 },
+      { "pattern": "CVCVCVC", "weight": 5 }
+    ],
+    "8": [
+      { "pattern": "CVCVCVCV", "weight": 18 },
+      { "pattern": "VCVCVCVC", "weight": 10 },
+      { "pattern": "CVVCVCVC", "weight": 6 }
+    ],
+    "9": [
+      { "pattern": "CVCVCVCVC", "weight": 18 },
+      { "pattern": "VCVCVCVCV", "weight": 10 },
+      { "pattern": "CVVCVCVCV", "weight": 6 }
+    ],
+    "10": [
+      { "pattern": "CVCVCVCVCV", "weight": 18 },
+      { "pattern": "VCVCVCVCVC", "weight": 10 }
+    ],
+    "11": [
+      { "pattern": "CVCVCVCVCVC", "weight": 18 },
+      { "pattern": "VCVCVCVCVCV", "weight": 10 }
+    ],
+    "12": [
+      { "pattern": "CVCVCVCVCVCV", "weight": 18 },
+      { "pattern": "VCVCVCVCVCVC", "weight": 10 }
+    ]
+  },
+  "hardConstraints": {
+    "disallowedSubstrings": ["jq", "qx", "zx", "vw", "kj", "ii", "uu", "aa", "yy", "bx", "cx", "dx", "fx", "gx", "hx", "jx", "kx", "lx", "mx", "nx", "px", "rx", "sx", "tx", "wx"],
+    "ckMustFollowVowel": true,
+    "quMustPrecedeVowel": true
+  },
+  "softConstraints": {
+    "ngNotFinalPenalty": 0.2,
+    "blendNotInitialPenalty": 0.5,
+    "repeatedUnitPenalty": 0.1,
+    "tripleLetterPenalty": 0.0
+  },
+  "scoring": {
+    "dimensions": {
+      "brevity": {
+        "weight": 0.20,
+        "scores": { "3": 95, "4": 100, "5": 90, "6": 75, "7": 60, "8": 45, "9": 35, "10": 25, "11": 18, "12": 12 }
+      },
+      "pronounceability": {
+        "weight": 0.25,
+        "digraphBonus": 8,
+        "blendBonus": 5,
+        "awkwardBigramPenalty": -15,
+        "vowelConsonantAlternationBonus": 10,
+        "idealVowelRatioMin": 0.30,
+        "idealVowelRatioMax": 0.55,
+        "vowelRatioPenaltyPerPoint": 1.5
+      },
+      "visualBalance": {
+        "weight": 0.10,
+        "ascenders": ["b", "d", "f", "h", "k", "l", "t"],
+        "descenders": ["g", "j", "p", "q", "y"],
+        "neutrals": ["a", "c", "e", "i", "m", "n", "o", "r", "s", "u", "v", "w", "x", "z"],
+        "varietyBonus": 10,
+        "tripleRepeatPenalty": -20
+      },
+      "memorability": {
+        "weight": 0.15,
+        "shortBonus": 15,
+        "phonemeBonus": 5,
+        "confusableChars": ["1l", "0O", "rn"],
+        "rhythmBonus": 8
+      },
+      "distinctiveness": {
+        "weight": 0.10,
+        "commonPrefixes": ["the", "pre", "pro", "con", "com", "dis", "mis", "out", "over", "under"],
+        "commonSuffixes": ["ing", "tion", "ment", "ness", "able", "ible", "ful", "less", "ous", "ive"],
+        "commonWordPenalty": -12,
+        "noveltyBonus": 10,
+        "minEntropy": 2.0
+      },
+      "trademarkSafety": {
+        "weight": 0.10,
+        "knownBrands": ["google", "apple", "amazon", "meta", "micro", "tesla", "uber", "lyft", "stripe", "slack", "zoom", "snap", "tiktok", "adobe", "intel", "cisco", "oracle", "sales", "shop", "drop", "cloud", "bit", "coin", "open", "chat"],
+        "brandSubstringPenalty": -25,
+        "noveltyBonus": 15,
+        "maxRealWordLength": 4
+      },
+      "domainPremium": {
+        "weight": 0.10,
+        "lengthPremium": { "3": 100, "4": 95, "5": 80, "6": 60, "7": 40, "8": 25, "9": 15, "10": 10, "11": 8, "12": 5 },
+        "comBonus": 15,
+        "availabilityBonus": 20
+      }
+    },
+    "awkwardBigrams": ["bp", "bx", "cb", "cd", "cf", "cg", "cj", "cp", "cv", "cw", "cx", "db", "dc", "df", "dg", "dk", "dl", "dm", "dn", "dp", "dt", "dv", "dw", "dx", "fb", "fc", "fd", "fg", "fj", "fk", "fm", "fn", "fp", "fq", "fv", "fw", "fx", "gb", "gc", "gd", "gf", "gj", "gk", "gp", "gq", "gv", "gw", "gx", "hb", "hc", "hd", "hf", "hg", "hj", "hk", "hl", "hm", "hn", "hp", "hq", "hr", "hs", "ht", "hv", "hw", "hx", "jb", "jc", "jd", "jf", "jg", "jh", "jk", "jl", "jm", "jn", "jp", "jq", "jr", "js", "jt", "jv", "jw", "jx", "jz", "kb", "kc", "kd", "kf", "kg", "kj", "kp", "kq", "kv", "kw", "kx", "lq", "lx", "mj", "mk", "mq", "mv", "mx", "pq", "pv", "px", "qb", "qc", "qd", "qf", "qg", "qh", "qj", "qk", "ql", "qm", "qn", "qp", "qq", "qr", "qs", "qt", "qv", "qw", "qx", "qy", "qz", "sx", "tq", "tx", "vb", "vc", "vd", "vf", "vg", "vj", "vk", "vm", "vn", "vp", "vq", "vt", "vw", "vx", "wq", "wv", "wx", "xb", "xc", "xd", "xf", "xg", "xj", "xk", "xl", "xm", "xn", "xp", "xq", "xr", "xs", "xt", "xv", "xw", "xz", "yq", "yx", "zb", "zc", "zd", "zf", "zg", "zj", "zk", "zl", "zm", "zn", "zp", "zq", "zr", "zs", "zt", "zv", "zw", "zx"]
+  },
+  "stylePresets": {
+    "balanced": {
+      "description": "Well-rounded, English-like names. Default.",
+      "rareLetterMultiplier": 0.3,
+      "digraphPreference": 1.0,
+      "blendPreference": 1.0
+    },
+    "punchy": {
+      "description": "Short, sharp, impactful names with strong consonants.",
+      "rareLetterMultiplier": 0.5,
+      "digraphPreference": 0.6,
+      "blendPreference": 0.8,
+      "preferredConsonants": ["k", "t", "p", "b", "d", "g", "v", "z"],
+      "preferredVowels": ["a", "i", "o"]
+    },
+    "flowing": {
+      "description": "Smooth, melodic names favoring digraphs and blends.",
+      "rareLetterMultiplier": 0.1,
+      "digraphPreference": 2.0,
+      "blendPreference": 1.5,
+      "preferredConsonants": ["l", "m", "n", "r", "s", "th", "sh"],
+      "preferredVowels": ["a", "e", "i", "o", "ea", "ai"]
+    },
+    "technical": {
+      "description": "Modern tech-sounding names allowing rarer letters.",
+      "rareLetterMultiplier": 1.5,
+      "digraphPreference": 0.5,
+      "blendPreference": 0.5,
+      "preferredConsonants": ["x", "z", "v", "k", "q", "t"],
+      "preferredVowels": ["i", "o", "u", "e"]
+    }
+  }
+}

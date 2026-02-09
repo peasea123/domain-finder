@@ -5,7 +5,6 @@ import { GeneratorSettings } from "@/components/GeneratorSettings";
 import { CheckerSettings } from "@/components/CheckerSettings";
 import { ResultsTabs } from "@/components/ResultsTabs";
 import { BatchCheckAdvanced } from "@/components/BatchCheckAdvanced";
-import { BatchCheckResults } from "@/components/BatchCheckResults";
 import { GenerateRequest, CheckerConfig } from "@/lib/schema";
 import { CheckResult } from "@/lib/checker";
 
@@ -149,14 +148,9 @@ export default function Home() {
           </div>
         )}
 
-        {/* Batch Check All Section */}
+        {/* Batch Check Advanced Section */}
         <div className="mb-16">
           <BatchCheckAdvanced />
-        </div>
-
-        {/* Batch Check Results Section */}
-        <div className="mb-16">
-          <BatchCheckResults />
         </div>
       </div>
 

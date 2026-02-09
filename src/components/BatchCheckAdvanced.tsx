@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CheckResult } from "@/lib/checker";
 
 interface BatchSession {
@@ -31,12 +31,25 @@ export function BatchCheckAdvanced() {
   const [session, setSession] = useState<BatchSession | null>(null);
   const [recentDomains, setRecentDomains] = useState<CheckResult[]>([]);
   const [availableDomains, setAvailableDomains] = useState<CheckResult[]>([]);
+  const [attemptedDomains, setAttemptedDomains] = useState<CheckResult[]>([]);
   const [totalCheckedOverall, setTotalCheckedOverall] = useState(0);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [batchCount, setBatchCount] = useState(0);
   const [abortController, setAbortController] = useState<AbortController | null>(null);
   const [wasStopped, setWasStopped] = useState(false);
+
+  // Initialize to blank on component mount
+  useEffect(() => {
+    setRecentDomains([]);
+    setAvailableDomains([]);
+    setAttemptedDomains([]);
+    setTotalCheckedOverall(0);
+    setSession(null);
+    setBatchCount(0);
+    setError(null);
+    setWasStopped(false);
+  }, []);
 
   const calculateTotal = () => {
     const vowels = 5;
@@ -93,6 +106,11 @@ export function BatchCheckAdvanced() {
     const controller = new AbortController();
     setAbortController(controller);
 
+    // Reset attempted domains for first batch, keep for subsequent batches
+    if (!session) {
+      setAttemptedDomains([]);
+    }
+
     const newSession: BatchSession = {
       pattern,
       length,
@@ -143,6 +161,7 @@ export function BatchCheckAdvanced() {
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
+      const currentBatchAttempted: CheckResult[] = [];
 
       while (true) {
         const { done, value } = await reader.read();
@@ -156,21 +175,38 @@ export function BatchCheckAdvanced() {
 
           try {
             const result = JSON.parse(line);
+            currentBatchAttempted.push(result);
+
+            // Check for duplicates within session
+            const isDuplicate = attemptedDomains.some(
+              (d) => d.domain === result.domain
+            );
+            if (isDuplicate) {
+              setError(
+                `Warning: Domain ${result.domain} was already checked in a previous batch of this session. Deduplication may have failed.`
+              );
+            }
+
             setTotalCheckedOverall((prev) => prev + 1);
             setRecentDomains((prev) => [result, ...prev.slice(0, 9)]);
 
             if (result.verdict === "AVAILABLE") {
               setAvailableDomains((prev) => [result, ...prev]);
-              setSession((prev) => prev ? { ...prev, totalAvailable: prev.totalAvailable + 1 } : null);
+              setSession((prev) =>
+                prev ? { ...prev, totalAvailable: prev.totalAvailable + 1 } : null
+              );
             }
           } catch (e) {
             // Skip invalid JSON
           }
         }
       }
+
+      // After successful batch, add all attempted domains
+      setAttemptedDomains((prev) => [...prev, ...currentBatchAttempted]);
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") {
-        // User stopped the batch
+        // User stopped the batch - still add what was attempted so far
         setWasStopped(true);
       } else {
         setError(err instanceof Error ? err.message : "Unknown error");
@@ -189,9 +225,17 @@ export function BatchCheckAdvanced() {
   };
 
   const handleSaveResults = () => {
+    // Export all attempted domains (not just available), so user has complete batch record
+    const domainsToExport = attemptedDomains.length > 0 ? attemptedDomains : availableDomains;
+    
+    if (domainsToExport.length === 0) {
+      setError("No domains to export");
+      return;
+    }
+
     const csvContent = [
       ["Domain", "Verdict", "IP", "RDAP Status", "DNS Found", "HTTP Resolved", "Timestamp"],
-      ...availableDomains.map((d) => [
+      ...domainsToExport.map((d) => [
         d.domain,
         d.verdict,
         d.ip || "N/A",
@@ -208,7 +252,7 @@ export function BatchCheckAdvanced() {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `available-domains-${Date.now()}.csv`;
+    a.download = `batch-${batchCount}-attempted-domains-${Date.now()}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
   };
@@ -217,6 +261,7 @@ export function BatchCheckAdvanced() {
     setSession(null);
     setRecentDomains([]);
     setAvailableDomains([]);
+    setAttemptedDomains([]);
     setTotalCheckedOverall(0);
     setStartTime(null);
     setBatchCount(0);
@@ -505,8 +550,15 @@ export function BatchCheckAdvanced() {
                 wasStopped ? "text-yellow-800" : "text-green-800"
               }`}
             >
-              Checked {totalCheckedOverall.toLocaleString()} domains • Found{" "}
-              {availableDomains.length} available
+              <strong>Batch {batchCount}:</strong> Attempted {attemptedDomains.length.toLocaleString()} domains
+              {availableDomains.length > 0 && ` • Found ${availableDomains.length} available`}
+            </p>
+            <p
+              className={`text-xs mt-1 ${
+                wasStopped ? "text-yellow-700" : "text-green-700"
+              }`}
+            >
+              Total session: {totalCheckedOverall.toLocaleString()} attempted across {batchCount} batch(es)
             </p>
           </div>
 
@@ -533,13 +585,13 @@ export function BatchCheckAdvanced() {
           )}
 
           {/* Save Options */}
-          {availableDomains.length > 0 && (
+          {attemptedDomains.length > 0 && (
             <div>
               <button
                 onClick={handleSaveResults}
                 className="w-full px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition mb-2"
               >
-                💾 Download Results as CSV
+                💾 Download Batch {batchCount} ({attemptedDomains.length} attempted domains)
               </button>
             </div>
           )}

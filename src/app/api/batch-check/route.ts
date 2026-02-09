@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateAllCombinations } from "@/lib/generator";
 import { checkDomain, CheckResult } from "@/lib/checker";
 
-export const maxDuration = 900; // 15 minutes for streaming
+// Vercel hobby plan max: 300s (5 minutes)
+// Pro plan allows 900s (15 minutes)
+// For long batch checks, use CLI script instead
+export const maxDuration = 300;
 
 interface BatchCheckRequest {
   pattern: "CVCV" | "CVCC" | "VCVC" | "CVCVC" | "CVVC" | "CCVC";

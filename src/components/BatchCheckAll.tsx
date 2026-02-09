@@ -130,10 +130,25 @@ export function BatchCheckAll({ onResultsUpdate }: BatchCheckAllProps) {
 
       {/* Warning Banner */}
       {!isRunning && (
-        <div className="p-4 bg-yellow-50 border border-yellow-300 rounded-lg">
-          <p className="text-sm text-yellow-800">
-            <strong>⏱️ Time Warning:</strong> This will check <strong>{calculateTotal().toLocaleString()}</strong> domains and take approximately <strong>{estimatedTime()} minutes</strong>. Make sure you&apos;re ready to wait!
-          </p>
+        <div className="space-y-3">
+          <div className="p-4 bg-yellow-50 border border-yellow-300 rounded-lg">
+            <p className="text-sm text-yellow-800">
+              <strong>⏱️ Time Warning:</strong> This will check <strong>{calculateTotal().toLocaleString()}</strong> domains and take approximately <strong>{estimatedTime()} minutes</strong>. Make sure you&apos;re ready to wait!
+            </p>
+          </div>
+          {estimatedTime() > 5 && (
+            <div className="p-4 bg-red-50 border border-red-300 rounded-lg">
+              <p className="text-sm text-red-800">
+                <strong>⚠️ Timeout Warning:</strong> Your estimated time ({estimatedTime()} min) exceeds the 5-minute browser timeout. For large batches, use the <strong>CLI script</strong> instead:
+              </p>
+              <code className="block bg-red-100 p-2 rounded mt-2 text-xs font-mono text-red-900">
+                node scripts/batch-check-cvcv-simple.js
+              </code>
+              <p className="text-xs text-red-700 mt-2">
+                The CLI runs locally without time limits and is recommended for CVCV or larger patterns.
+              </p>
+            </div>
+          )}
         </div>
       )}
 

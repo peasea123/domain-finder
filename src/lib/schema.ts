@@ -47,3 +47,25 @@ export const RunRequestSchema = z.object({
 });
 
 export type RunRequest = z.infer<typeof RunRequestSchema>;
+
+// Smart generator request schema
+export const SmartGenerateRequestSchema = z.object({
+  targetLen: z.number().int().min(3).max(12).default(5),
+  count: z.number().int().min(1).max(500).default(50),
+  tlds: z.array(z.string()).min(1).default(["com"]),
+  style: z
+    .enum(["balanced", "punchy", "flowing", "technical"])
+    .default("balanced"),
+  seed: z.number().optional(),
+  scored: z.boolean().default(true),
+});
+
+export type SmartGenerateRequest = z.infer<typeof SmartGenerateRequestSchema>;
+
+// Smart run request schema (smart generate + check in one call)
+export const SmartRunRequestSchema = z.object({
+  generateConfig: SmartGenerateRequestSchema,
+  checkerConfig: CheckerConfigSchema.optional(),
+});
+
+export type SmartRunRequest = z.infer<typeof SmartRunRequestSchema>;

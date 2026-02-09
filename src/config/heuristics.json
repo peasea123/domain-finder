@@ -37,64 +37,54 @@
     "3": [
       { "pattern": "CVC", "weight": 15 },
       { "pattern": "VCV", "weight": 8 },
-      { "pattern": "CCV", "weight": 5 },
-      { "pattern": "CVV", "weight": 5 }
+      { "pattern": "CVV", "weight": 4 }
     ],
     "4": [
       { "pattern": "CVCV", "weight": 15 },
-      { "pattern": "CVCC", "weight": 10 },
-      { "pattern": "VCVC", "weight": 8 },
-      { "pattern": "CCVC", "weight": 7 },
-      { "pattern": "CVVC", "weight": 6 }
+      { "pattern": "VCVC", "weight": 10 },
+      { "pattern": "CVVC", "weight": 6 },
+      { "pattern": "VCVC", "weight": 5 }
     ],
     "5": [
-      { "pattern": "CVCVC", "weight": 15 },
-      { "pattern": "CVCCV", "weight": 10 },
-      { "pattern": "CCVCV", "weight": 8 },
-      { "pattern": "VCVCV", "weight": 7 },
+      { "pattern": "CVCVC", "weight": 18 },
+      { "pattern": "VCVCV", "weight": 10 },
       { "pattern": "CVVCV", "weight": 6 },
-      { "pattern": "CVCVC", "weight": 12 }
+      { "pattern": "CVCVC", "weight": 5 },
+      { "pattern": "VCVC", "weight": 4 }
     ],
     "6": [
-      { "pattern": "CVCVCV", "weight": 15 },
-      { "pattern": "CVCCVC", "weight": 10 },
-      { "pattern": "CCVCVC", "weight": 8 },
-      { "pattern": "CVCVCC", "weight": 7 },
-      { "pattern": "VCVCVC", "weight": 6 },
-      { "pattern": "CVVCVC", "weight": 5 }
+      { "pattern": "CVCVCV", "weight": 18 },
+      { "pattern": "VCVCVC", "weight": 10 },
+      { "pattern": "CVVCVC", "weight": 6 },
+      { "pattern": "CVCVVC", "weight": 5 }
     ],
     "7": [
-      { "pattern": "CVCVCVC", "weight": 15 },
-      { "pattern": "CVCCVCV", "weight": 10 },
-      { "pattern": "CVCVCVC", "weight": 12 },
-      { "pattern": "CCVCVCV", "weight": 7 },
-      { "pattern": "VCVCVCV", "weight": 6 }
+      { "pattern": "CVCVCVC", "weight": 18 },
+      { "pattern": "VCVCVCV", "weight": 10 },
+      { "pattern": "CVVCVCV", "weight": 6 },
+      { "pattern": "CVCVCVC", "weight": 5 }
     ],
     "8": [
-      { "pattern": "CVCVCVCV", "weight": 15 },
-      { "pattern": "CVCCVCVC", "weight": 10 },
-      { "pattern": "CVCCVCCV", "weight": 8 },
-      { "pattern": "CVCVCCVC", "weight": 7 },
-      { "pattern": "VCVCVCVC", "weight": 5 }
+      { "pattern": "CVCVCVCV", "weight": 18 },
+      { "pattern": "VCVCVCVC", "weight": 10 },
+      { "pattern": "CVVCVCVC", "weight": 6 }
     ],
     "9": [
-      { "pattern": "CVCVCVCVC", "weight": 15 },
-      { "pattern": "CVCCVCVCV", "weight": 10 },
-      { "pattern": "CVCVCCVCV", "weight": 8 },
-      { "pattern": "CVCCVCCVC", "weight": 6 }
+      { "pattern": "CVCVCVCVC", "weight": 18 },
+      { "pattern": "VCVCVCVCV", "weight": 10 },
+      { "pattern": "CVVCVCVCV", "weight": 6 }
     ],
     "10": [
-      { "pattern": "CVCVCVCVCV", "weight": 15 },
-      { "pattern": "CVCCVCVCVC", "weight": 10 },
-      { "pattern": "CVCVCVCCVC", "weight": 8 }
+      { "pattern": "CVCVCVCVCV", "weight": 18 },
+      { "pattern": "VCVCVCVCVC", "weight": 10 }
     ],
     "11": [
-      { "pattern": "CVCVCVCVCVC", "weight": 15 },
-      { "pattern": "CVCCVCVCVCV", "weight": 10 }
+      { "pattern": "CVCVCVCVCVC", "weight": 18 },
+      { "pattern": "VCVCVCVCVCV", "weight": 10 }
     ],
     "12": [
-      { "pattern": "CVCVCVCVCVCV", "weight": 15 },
-      { "pattern": "CVCCVCVCVCVC", "weight": 10 }
+      { "pattern": "CVCVCVCVCVCV", "weight": 18 },
+      { "pattern": "VCVCVCVCVCVC", "weight": 10 }
     ]
   },
   "hardConstraints": {

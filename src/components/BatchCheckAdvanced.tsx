@@ -35,6 +35,8 @@ export function BatchCheckAdvanced() {
   const [startTime, setStartTime] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [batchCount, setBatchCount] = useState(0);
+  const [abortController, setAbortController] = useState<AbortController | null>(null);
+  const [wasStopped, setWasStopped] = useState(false);
 
   const calculateTotal = () => {
     const vowels = 5;
@@ -86,6 +88,10 @@ export function BatchCheckAdvanced() {
     setIsRunning(true);
     setError(null);
     setStartTime(Date.now());
+    setWasStopped(false);
+
+    const controller = new AbortController();
+    setAbortController(controller);
 
     const newSession: BatchSession = {
       pattern,
@@ -124,6 +130,7 @@ export function BatchCheckAdvanced() {
             seed: newSession.seed,
           },
         }),
+        signal: controller.signal,
       });
 
       if (!response.ok) {
@@ -162,10 +169,60 @@ export function BatchCheckAdvanced() {
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      if (err instanceof Error && err.name === "AbortError") {
+        // User stopped the batch
+        setWasStopped(true);
+      } else {
+        setError(err instanceof Error ? err.message : "Unknown error");
+      }
     } finally {
       setIsRunning(false);
+      setAbortController(null);
     }
+  };
+
+  const handleStopBatch = () => {
+    if (abortController) {
+      abortController.abort();
+      setWasStopped(true);
+    }
+  };
+
+  const handleSaveResults = () => {
+    const csvContent = [
+      ["Domain", "Verdict", "IP", "RDAP Status", "DNS Found", "HTTP Resolved", "Timestamp"],
+      ...availableDomains.map((d) => [
+        d.domain,
+        d.verdict,
+        d.ip || "N/A",
+        d.rdapStatus || "N/A",
+        d.dnsRecordFound ? "Yes" : "No",
+        d.httpResolved ? "Yes" : "No",
+        d.timestamp,
+      ]),
+    ]
+      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `available-domains-${Date.now()}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleReset = () => {
+    setSession(null);
+    setRecentDomains([]);
+    setAvailableDomains([]);
+    setTotalCheckedOverall(0);
+    setStartTime(null);
+    setBatchCount(0);
+    setError(null);
+    setWasStopped(false);
+    setAbortController(null);
   };
 
   const elapsedTime = startTime ? Math.floor((Date.now() - startTime) / 1000) : 0;
@@ -419,31 +476,81 @@ export function BatchCheckAdvanced() {
             <div className="w-3 h-3 bg-pink-600 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
             <div className="w-3 h-3 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
           </div>
+
+          {/* Stop Button */}
+          <button
+            onClick={handleStopBatch}
+            className="w-full px-6 py-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition text-lg"
+          >
+            ⏹️ Stop Batch (Keep Results)
+          </button>
         </div>
       )}
 
-      {/* Batch Complete - Show Continue Button */}
+      {/* Batch Complete or Stopped - Show Options */}
       {!isRunning && session && (
         <div className="space-y-4">
-          <div className="bg-green-50 p-6 rounded-lg border-2 border-green-300 text-center">
-            <p className="text-lg font-bold text-green-900">✅ Batch {batchCount} Complete!</p>
-            <p className="text-sm text-green-800 mt-2">
-              Checked {totalCheckedOverall.toLocaleString()} domains • Found {availableDomains.length} available
+          <div
+            className={`p-6 rounded-lg border-2 text-center ${
+              wasStopped
+                ? "bg-yellow-50 border-yellow-300"
+                : "bg-green-50 border-green-300"
+            }`}
+          >
+            <p className={`text-lg font-bold ${wasStopped ? "text-yellow-900" : "text-green-900"}`}>
+              {wasStopped ? "⏹️ Batch Stopped" : "✅ Batch Complete"}
+            </p>
+            <p
+              className={`text-sm mt-2 ${
+                wasStopped ? "text-yellow-800" : "text-green-800"
+              }`}
+            >
+              Checked {totalCheckedOverall.toLocaleString()} domains • Found{" "}
+              {availableDomains.length} available
             </p>
           </div>
 
+          {/* Available Domains Summary (if any found) */}
+          {availableDomains.length > 0 && (
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <span className="text-2xl">🎉</span>
+                Available Domains ({availableDomains.length})
+              </p>
+              <div className="bg-green-50 rounded-lg border-2 border-green-300 h-40 overflow-y-auto p-3">
+                <div className="space-y-1">
+                  {availableDomains.map((domain) => (
+                    <div
+                      key={domain.domain}
+                      className="text-sm font-mono p-2 bg-white rounded border-l-4 border-green-500 text-green-900 font-bold"
+                    >
+                      ✅ {domain.domain}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Save Options */}
+          {availableDomains.length > 0 && (
+            <div>
+              <button
+                onClick={handleSaveResults}
+                className="w-full px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition mb-2"
+              >
+                💾 Download Results as CSV
+              </button>
+            </div>
+          )}
+
+          {/* Action Buttons */}
           <div className="grid grid-cols-2 gap-4">
             <button
-              onClick={() => {
-                setSession(null);
-                setRecentDomains([]);
-                setBatchCount(0);
-                setTotalCheckedOverall(0);
-                setStartTime(null);
-              }}
+              onClick={handleReset}
               className="px-6 py-2 bg-gray-500 text-white font-bold rounded-lg hover:bg-gray-600 transition"
             >
-              Start Over
+              🔄 Start Over
             </button>
             <button
               onClick={handleStartBatch}
@@ -451,6 +558,25 @@ export function BatchCheckAdvanced() {
             >
               ➡️ Continue Next 1000
             </button>
+          </div>
+
+          {/* Session Info */}
+          <div className="bg-white p-4 rounded-lg border border-gray-300 text-xs text-gray-600 space-y-1">
+            <p>
+              <strong>Pattern:</strong> {session.pattern} @ {session.length} letters
+            </p>
+            <p>
+              <strong>TLDs:</strong> {session.tlds.join(", ")}
+            </p>
+            <p>
+              <strong>Order:</strong>{" "}
+              {session.random
+                ? `Random${session.seed ? ` (seed: ${session.seed})` : ""}`
+                : "Alphabetical"}
+            </p>
+            <p>
+              <strong>Next Offset:</strong> {session.offset + 1000} (for continue button)
+            </p>
           </div>
         </div>
       )}
